@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "xabikos.reactsnippets",
+        "compulim.vscode-express",
+        "waderyan.nodejs-extension-pack",
+        "roerohan.mongo-snippets-for-node-js",
+        "editorconfig.editorconfig",
+        "mongodb.mongodb-vscode",
+        "lihui.vs-color-picker"
+    ]
+}
