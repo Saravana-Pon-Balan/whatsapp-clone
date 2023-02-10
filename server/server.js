@@ -1,20 +1,40 @@
-import APP from "express";
+const express = require("express");
+const app = express();
+const server = require("http").createServer(app);
+const io = require("socket.io")(server,{
+  cors:{
+    origin:['http://localhost:3000'],
+  }
+});
 import connectDB from "./dbConnection/index.js";
 import routes from "./routes/index.js";
 import configureExpressApp from "./config/index.js";
 
-const app = new APP();
-configureExpressApp(app)
-
 const PORT = 3001;
 
-const startServer = () => {
-  Promise.all([connectDB()])
-    .then(() => {
-      app.listen(PORT);
-      console.log(`Server started on Port ${PORT}`);
-      routes(app);
-    }).catch((error) => console.error(`Unable to start the server`, error));
-};
+configureExpressApp(app);
+routes(app);
 
-startServer();
+io.on("connect", (socket) => {  
+  socket.on('send-message',(messages,channelId)=>{
+    console.log(messages);
+    socket.to(channelId).emit('receive-message',messages)
+  })
+  socket.on('join-channel',channelId=>{
+    socket.join(channelId);
+    console.log(`joined ${channelId}`);
+  })
+
+
+  socket.on('disconnect', () => {
+  console.log('Client disconnected');
+  });
+  });
+
+connectDB().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server started on Port ${PORT}`);
+  });
+}).catch((error) => {
+  console.error(`Unable to start the server`, error);
+});

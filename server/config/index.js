@@ -7,6 +7,7 @@ const configureExpressApp = (app) =>{
     app.use(bodyParser.json());
     app.use(compression(9));
     app.use(cors());
+    
 };
 
 export default configureExpressApp;

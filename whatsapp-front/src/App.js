@@ -38,8 +38,9 @@ function App(props) {
   const { userInfo } = props;
   const [selectedChat, setChat] = useState();
   const [refreshContactList, toggleRefreshContactList] = useState(false);
-
   return (
+    
+     
     <Container>
       <ContactList
         setChat={setChat}

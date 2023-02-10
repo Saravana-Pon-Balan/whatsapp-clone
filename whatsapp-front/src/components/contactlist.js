@@ -18,6 +18,7 @@ const ProfileInfoDiv = styled.div`
   flex-direction: row;
   background: #ededed;
   padding: 10px;
+  width:100%
 `;
 const ProfileImage = styled.img`
   width: 32px;
@@ -100,6 +101,12 @@ const SearchResults = styled.div`
   width: 100%;
   height: 100px;
 `;
+const Logout = styled.button`
+  width: 20%;
+  margin-left: 70%;
+  height: 40px;
+ 
+`;
 
 const ContactComponent = (props) =>{
   const { userData, setChat, userInfo } = props;
@@ -165,6 +172,7 @@ const ContactList = (props)=>{
         <Container>
         <ProfileInfoDiv>
             <ProfileImage src={userInfo.picture}></ProfileImage>
+            <Logout>Logout</Logout>
         </ProfileInfoDiv>
 
         <SearchBox>

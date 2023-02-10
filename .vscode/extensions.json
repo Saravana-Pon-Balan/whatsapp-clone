@@ -6,6 +6,7 @@
         "roerohan.mongo-snippets-for-node-js",
         "editorconfig.editorconfig",
         "mongodb.mongodb-vscode",
-        "lihui.vs-color-picker"
+        "lihui.vs-color-picker",
+        "litleleprikon.socket-io-vscode"
     ]
 }

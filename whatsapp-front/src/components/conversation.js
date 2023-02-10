@@ -2,8 +2,8 @@ import styled from "styled-components";
 import EmojiPicker from 'emoji-picker-react';
 import React,{ useState ,useRef,useEffect} from "react";
 import { SearchContainer,SearchInput } from "./contactlist";
-import { messagesList } from "../mockData";
 import httpManager from "../managers/httpManager";
+import io from "socket.io-client";
 
 const Container = styled.div`
   display: flex;
@@ -87,13 +87,28 @@ function Conversation(props) {
   const [pickerVisible, togglePicker] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const inputRef = useRef(null);
-  let channelId="";
+  const messageContainerRef = useRef(null);
+  const socket = io("http://localhost:3001");
+
+  socket.on('receive-message',(messages) => {
+    const updatedMessages = selectedChat.channelData.messages.concat({...messages});
+    setMessageList(updatedMessages);
+  });
+  
+
+
   useEffect(() => {
-    setMessageList(selectedChat.channelData.messages);
-  }, [selectedChat]);
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;    }
+    }, [messageList]);
+    useEffect(() => {
+      setMessageList(selectedChat.channelData.messages);
+    }, [selectedChat]);
+    
+  
 
   const onEnterPress = async (event) => {
-    let channelId = selectedChat.channelData._id;
+    var channelId = selectedChat.channelData._id;
     if (event.key === "Enter") {
       if (!messageList || !messageList.length) {
         const channelUsers = [
@@ -123,31 +138,16 @@ function Conversation(props) {
         channelId,
         messages: msgReqData,
       });
+  refreshContactList();
+  socket.emit('send-message', msgReqData,channelId);
+  socket.emit('join-channel',channelId);
+
       messages.push(msgReqData);
       setMessageList(messages);
       setText("");
-
     }
   };
-  refreshContactList();
-
-  useEffect(() => {
-    let channelId = selectedChat.channelData._id;
-
-  const getMessage = async()=>{
-    const channelRes = await httpManager.getMessage(channelId);
-    setMessageList(channelRes.data.responseData[0].messages); 
-
-  }
-
-  const intervalId = setInterval(() => {
-    getMessage();
-  }, 1000);
-
-  // clean up the interval when the component unmounts
-  return () => clearInterval(intervalId);
-});
-
+ 
   return (
     <Container>
     <ProfileHeader>
@@ -156,7 +156,7 @@ function Conversation(props) {
         <ContactName>{selectedChat.otherUser.name}</ContactName>
       </ProfileInfo>
     </ProfileHeader>
-    <MessageContainer>
+    <MessageContainer ref={messageContainerRef}>
       {messageList?.map((messageData) => (
         <MessageDiv isYours={messageData.senderEmail === userInfo.email}>
           <Message isYours={messageData.senderEmail === userInfo.email}>
