@@ -96,7 +96,7 @@ const LoginComponent = () => {
                 <GoogleOneTapLogin 
                 onError={(error) => console.log(error)}
                 onSuccess={responseGoogle}
-                googleAccountConfigs={{ client_id:"1032791406018-hnh8c86sr41ad1f0fb089fp16dg485et.apps.googleusercontent.com" }} 
+                googleAccountConfigs={{ client_id:"" }} 
                 />
               </Instructions>
               <QRCode src={require('../../images/qr-placeholder.png')} />
