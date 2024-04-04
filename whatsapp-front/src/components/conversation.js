@@ -1,9 +1,10 @@
 import styled from "styled-components";
 import EmojiPicker from 'emoji-picker-react';
-import React,{ useState ,useRef,useEffect} from "react";
-import { SearchContainer,SearchInput } from "./contactlist";
+import React, { useState, useEffect, useRef } from "react";
+import { SearchContainer, SearchInput } from "./contactlist";
+import { messagesList } from "../mockData";
 import httpManager from "../managers/httpManager";
-import io from "socket.io-client";
+import { io } from "socket.io-client";
 
 const Container = styled.div`
   display: flex;
@@ -84,31 +85,25 @@ const EmojiPickerWrapper = styled.div`
 function Conversation(props) {
   const { selectedChat, userInfo, refreshContactList } = props;
   const [text, setText] = useState("");
-  const [pickerVisible, togglePicker] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
   const [messageList, setMessageList] = useState([]);
   const inputRef = useRef(null);
-  const messageContainerRef = useRef(null);
   const socket = io("http://localhost:3001");
-
-  socket.on('receive-message',(messages) => {
-    const updatedMessages = selectedChat.channelData.messages.concat({...messages});
-    setMessageList(updatedMessages);
+  socket.on("msg", (msg) => {
+    setMessageList((messages) => {
+      const updatedMessages = [...messages, msg];
+      console.log(updatedMessages); // Log the updated messages here
+      return updatedMessages;
+    });
   });
   
-
-
   useEffect(() => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;    }
-    }, [messageList]);
-    useEffect(() => {
-      setMessageList(selectedChat.channelData.messages);
-    }, [selectedChat]);
+    setMessageList(selectedChat.channelData.messages);
     
-  
+  }, [selectedChat]);
 
   const onEnterPress = async (event) => {
-    var channelId = selectedChat.channelData._id;
+    let channelId = selectedChat.channelData._id;
     if (event.key === "Enter") {
       if (!messageList || !messageList.length) {
         const channelUsers = [
@@ -132,55 +127,53 @@ function Conversation(props) {
       const msgReqData = {
         text,
         senderEmail: userInfo.email,
+        receiverEmail: selectedChat.channelData.channelUsers[0].email,
         addedOn: new Date().getTime(),
       };
       const messageResponse = await httpManager.sendMessage({
         channelId,
         messages: msgReqData,
       });
-  refreshContactList();
-  socket.emit('send-message', msgReqData,channelId);
-  socket.emit('join-channel',channelId);
-
+      console.log(msgReqData);
+      socket.emit("user", {msgReqData:msgReqData,room:channelId});
       messages.push(msgReqData);
       setMessageList(messages);
       setText("");
     }
   };
- 
+
   return (
     <Container>
-    <ProfileHeader>
-      <ProfileInfo>
-        <ProfileImage src={selectedChat.otherUser.profilePic} />
-        <ContactName>{selectedChat.otherUser.name}</ContactName>
-      </ProfileInfo>
-    </ProfileHeader>
-    <MessageContainer ref={messageContainerRef}>
-      {messageList?.map((messageData) => (
-        <MessageDiv isYours={messageData.senderEmail === userInfo.email}>
-          <Message isYours={messageData.senderEmail === userInfo.email}>
-            {[messageData.text]}
-          </Message>
-        </MessageDiv>
-      ))}
-    </MessageContainer>
+      <ProfileHeader>
+        <ProfileInfo>
+          <ProfileImage src={selectedChat.otherUser.profilePic} />
+          <ContactName>{selectedChat.otherUser.name}</ContactName>
+        </ProfileInfo>
+      </ProfileHeader>
+      <MessageContainer>
+        {messageList?.map((messageData, index) => (
+          <MessageDiv key={index} isYours={messageData.senderEmail === userInfo.email}>
+            <Message isYours={messageData.senderEmail === userInfo.email}>
+              {[messageData.text]}
+            </Message>
+          </MessageDiv>
+        ))}
+      </MessageContainer>
 
-    <ChatBox>
-      <SearchContainer>
+      <ChatBox>
+        <SearchContainer>
           {pickerVisible && (
-          <EmojiPickerWrapper>
-            <EmojiPicker onEmojiClick={(emoji) => {
-              setText(text+emoji.emoji);
-              togglePicker(false);
-              inputRef.current.focus();              
-          }}
-          />
-          </EmojiPickerWrapper>
+            <EmojiPickerWrapper>
+              <EmojiPicker onEmojiClick={(emoji) => {
+                setText(text + emoji.emoji);
+                setPickerVisible(false);
+                inputRef.current.focus();
+              }} />
+            </EmojiPickerWrapper>
           )}
           <EmojiImage
             src={"/data.svg"}
-            onClick={() => togglePicker((pickerVisible) => !pickerVisible)}
+            onClick={() => setPickerVisible((pickerVisible) => !pickerVisible)}
           />
           <SearchInput
             placeholder="Type a message"
